@@ -26,7 +26,7 @@ export default function AdminRoleManager() {
       setEmployee(null);
 
       const res = await fetch(
-        `http://localhost:10000/api/roles/employee/${employeeId.trim()}`,
+        `${import.meta.env.VITE_API_URL}/api/roles/employee/${employeeId.trim()}`,
         {
           method: "GET",
           headers: {
@@ -67,7 +67,7 @@ export default function AdminRoleManager() {
       setError("");
       setMessage("");
 
-      const res = await fetch("http://localhost:10000/api/roles/promote", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/roles/promote`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

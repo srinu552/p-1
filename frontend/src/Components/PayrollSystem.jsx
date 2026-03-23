@@ -63,7 +63,7 @@ export default function PayrollSystem({ selectedEmployee }) {
       }
 
       const res = await fetch(
-        `http://localhost:10000/api/payroll/employee-details/${cleanEmployeeId}`,
+        `${import.meta.env.VITE_API_URL}/api/payroll/employee-details/${cleanEmployeeId}`,
         {
           method: "GET",
           headers: {
@@ -248,7 +248,7 @@ export default function PayrollSystem({ selectedEmployee }) {
 
       const adminToken = localStorage.getItem("adminToken");
 
-      const res = await fetch("http://localhost:10000/api/payroll/create", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payroll/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

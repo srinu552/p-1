@@ -61,7 +61,7 @@ function EmployeeAttendance() {
   const fetchTodayAttendance = async () => {
     try {
       const res = await authFetch(
-        "http://localhost:10000/api/attendance/today"
+        `${import.meta.env.VITE_API_URL}/api/attendance/today`
       );
 
       if (!res) return;
@@ -81,7 +81,7 @@ function EmployeeAttendance() {
   const handleLogin = async () => {
     try {
       const res = await authFetch(
-        "http://localhost:10000/api/attendance/clock-in",
+        `${import.meta.env.VITE_API_URL}/api/attendance/clock-in`,
         { method: "POST" }
       );
 
@@ -103,7 +103,7 @@ function EmployeeAttendance() {
   const handleLogout = async () => {
     try {
       const res = await authFetch(
-        "http://localhost:10000/api/attendance/clock-out",
+        `${import.meta.env.VITE_API_URL}/api/attendance/clock-out`,
         { method: "POST" }
       );
 

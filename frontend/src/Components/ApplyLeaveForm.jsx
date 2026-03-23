@@ -29,7 +29,7 @@ export default function ApplyLeaveForm() {
         localStorage.getItem("employeeToken") ||
         localStorage.getItem("adminToken");
 
-      const res = await fetch("http://localhost:10000/api/leaves/apply", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leaves/apply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

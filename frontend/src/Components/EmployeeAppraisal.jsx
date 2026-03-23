@@ -11,7 +11,7 @@ export default function EmployeeAppraisal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:10000/api/appraisal/create", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/appraisal/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -23,7 +23,7 @@ export default function AdminLeaveManagement() {
         return;
       }
 
-      const res = await fetch("http://localhost:10000/api/leaves/admin/all", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leaves/admin/all`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -73,7 +73,7 @@ export default function AdminLeaveManagement() {
       }
 
       const res = await fetch(
-        `http://localhost:10000/api/leaves/admin/${id}/status`,
+        `${import.meta.env.VITE_API_URL}/api/leaves/admin/${id}/status`,
         {
           method: "PUT",
           headers: {

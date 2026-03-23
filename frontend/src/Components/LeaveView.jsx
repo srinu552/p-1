@@ -16,7 +16,7 @@ export default function LeaveView() {
         localStorage.getItem("employeeToken") ||
         localStorage.getItem("adminToken");
 
-      const res = await fetch(`http://localhost:10000/api/leaves/my/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leaves/my/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

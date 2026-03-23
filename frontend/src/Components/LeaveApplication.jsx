@@ -69,7 +69,7 @@ export default function LeaveApplication() {
         return;
       }
 
-      const res = await fetch("http://localhost:10000/api/leaves/my-summary", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leaves/my-summary`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

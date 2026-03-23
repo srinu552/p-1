@@ -18,7 +18,7 @@ function AdminLogin() {
 
     try {
       const response = await axios.post(
-        "http://localhost:10000/api/auth/login",
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
         {
           email,
           password,

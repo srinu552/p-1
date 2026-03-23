@@ -15,7 +15,7 @@ function AdminEmployeeApproval() {
       const token = localStorage.getItem("adminToken");
 
       const res = await axios.get(
-        "http://localhost:10000/api/admin/pending-employees",
+        `${import.meta.env.VITE_API_URL}/api/admin/pending-employees`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ function AdminEmployeeApproval() {
       const token = localStorage.getItem("adminToken");
 
       const res = await axios.put(
-        `http://localhost:10000/api/admin/approve-employee/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/admin/approve-employee/${id}`,
         {},
         {
           headers: {
@@ -79,7 +79,7 @@ function AdminEmployeeApproval() {
       const token = localStorage.getItem("adminToken");
 
       const res = await axios.put(
-        `http://localhost:10000/api/admin/reject-employee/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/admin/reject-employee/${id}`,
         {},
         {
           headers: {

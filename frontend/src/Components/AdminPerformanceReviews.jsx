@@ -14,7 +14,7 @@ export default function AdminPerformanceReviews() {
       setLoading(true);
       setError("");
 
-      const res = await fetch("http://localhost:10000/api/reviews/all", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/all`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -18,7 +18,7 @@ export default function AdminManagerReview() {
       setFetching(true);
       setError("");
 
-      const res = await fetch("http://localhost:10000/api/reviews/managers", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/managers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -75,7 +75,7 @@ export default function AdminManagerReview() {
       setError("");
       setMessage("");
 
-      const res = await fetch("http://localhost:10000/api/reviews/admin-review", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/admin-review`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -47,7 +47,7 @@ export default function ManagerReviewPage() {
       setFetching(true);
       setError("");
 
-      const res = await fetch("http://localhost:10000/api/reviews/employees", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/employees`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -101,7 +101,7 @@ export default function ManagerReviewPage() {
       setMessage("");
 
       const res = await fetch(
-        "http://localhost:10000/api/reviews/manager-review",
+        `${import.meta.env.VITE_API_URL}/api/reviews/manager-review`,
         {
           method: "POST",
           headers: {

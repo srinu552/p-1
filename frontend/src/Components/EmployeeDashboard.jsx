@@ -61,7 +61,7 @@ export default function EmployeeDashboard() {
       }
 
       const res = await fetch(
-        "http://localhost:10000/api/employee-dashboard/my-tasks",
+        `${import.meta.env.VITE_API_URL}/api/employee-dashboard/my-tasks`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -104,7 +104,7 @@ export default function EmployeeDashboard() {
       }
 
       const res = await fetch(
-        "http://localhost:10000/api/employee-dashboard/announcements",
+        `${import.meta.env.VITE_API_URL}/api/employee-dashboard/announcements`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -148,7 +148,7 @@ export default function EmployeeDashboard() {
         return;
       }
 
-      const res = await fetch("http://localhost:10000/api/payroll/my-slips", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payroll/my-slips`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

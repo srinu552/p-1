@@ -27,7 +27,7 @@ export default function AdminUpdateProfile() {
         setLoading(true);
         setError("");
 
-        const res = await fetch("http://localhost:10000/api/admin/profile", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/profile`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -82,7 +82,7 @@ export default function AdminUpdateProfile() {
       setMessage("");
       setError("");
 
-      const res = await fetch("http://localhost:10000/api/admin/profile", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -20,7 +20,7 @@ function AdminAttendance() {
         }
 
         const res = await fetch(
-          "http://localhost:10000/api/attendance/admin",
+          `${import.meta.env.VITE_API_URL}/api/attendance/admin`,
           {
             headers: {
               "Content-Type": "application/json",

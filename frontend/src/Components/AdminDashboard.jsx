@@ -136,7 +136,7 @@ export default function AdminDashboard() {
       const token = getToken();
       if (!token) return;
 
-      const res = await fetch("http://localhost:10000/api/admin/employees", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/employees`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
       const token = getToken();
       if (!token) return;
 
-      const res = await fetch("http://localhost:10000/api/admin/announcements", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/announcements`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
       const token = getToken();
       if (!token) return;
 
-      const res = await fetch("http://localhost:10000/api/admin/announcements", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/announcements`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
       if (!token) return;
 
       const res = await fetch(
-        `http://localhost:10000/api/admin/announcements/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/admin/announcements/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -263,7 +263,7 @@ export default function AdminDashboard() {
       const token = getToken();
       if (!token) return;
 
-      const res = await fetch("http://localhost:10000/api/admin/tasks", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
         (emp) => String(emp.id) === String(taskForm.employeeId)
       );
 
-      const res = await fetch("http://localhost:10000/api/admin/tasks/create", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -352,7 +352,7 @@ export default function AdminDashboard() {
       const token = getToken();
       if (!token) return;
 
-      const res = await fetch(`http://localhost:10000/api/admin/tasks/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
 
       if (!newTitle || !newTitle.trim()) return;
 
-      const res = await fetch(`http://localhost:10000/api/admin/tasks/${task.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/${task.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

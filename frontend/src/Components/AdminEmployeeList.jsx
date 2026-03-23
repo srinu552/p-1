@@ -21,7 +21,7 @@ export default function AdminEmployeeList() {
 
       const token = localStorage.getItem("adminToken");
 
-      const res = await fetch("http://localhost:10000/api/employees", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/employees`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -158,7 +158,7 @@ export default function AdminEmployeeList() {
       const token = localStorage.getItem("adminToken");
 
       const res = await fetch(
-        `http://localhost:10000/api/employees/${editEmployee.id}`,
+        `${import.meta.env.VITE_API_URL}/api/employees/${editEmployee.id}`,
         {
           method: "PUT",
           headers: {
@@ -204,7 +204,7 @@ export default function AdminEmployeeList() {
     try {
       const token = localStorage.getItem("adminToken");
 
-      const res = await fetch(`http://localhost:10000/api/employees/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/employees/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -87,7 +87,7 @@ export default function UpdateProfile() {
         }
 
         const res = await fetch(
-          `http://localhost:10000/api/profile/${employeeUser.id}`,
+          `${import.meta.env.VITE_API_URL}/api/profile/${employeeUser.id}`,
           {
             method: "GET",
             headers: {
@@ -123,7 +123,7 @@ export default function UpdateProfile() {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:10000/api/profile/update", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
