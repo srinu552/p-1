@@ -1,0 +1,212 @@
+.role-manager-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #f4f7fb;
+}
+
+.role-manager-card {
+  width: 100%;
+  max-width: 580px;
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.role-manager-title {
+  margin: 0 0 20px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #222;
+  text-align: center;
+}
+
+.role-manager-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.role-search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.role-manager-input,
+.role-manager-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition: 0.3s ease;
+}
+
+.role-manager-input:focus,
+.role-manager-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+.role-manager-select {
+  margin-bottom: 16px;
+  background: #fff;
+}
+
+.role-manager-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.search-btn {
+  background: #007bff;
+  min-width: 120px;
+}
+
+.search-btn:hover {
+  background: #0069d9;
+}
+
+.update-btn {
+  width: 100%;
+  background: #28a745;
+}
+
+.update-btn:hover {
+  background: #218838;
+}
+
+.disabled-btn {
+  background: #999 !important;
+  cursor: not-allowed;
+}
+
+.employee-details-card {
+  background: #f7f9fc;
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.employee-details-card p {
+  margin: 8px 0;
+  color: #333;
+  font-size: 15px;
+  word-break: break-word;
+}
+
+.role-message {
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.error-message {
+  color: #d93025;
+}
+
+.success-message {
+  color: #1e8e3e;
+}
+
+/* Large tablets / medium laptops */
+@media (max-width: 992px) {
+  .role-manager-card {
+    max-width: 700px;
+    padding: 22px;
+  }
+
+  .role-manager-title {
+    font-size: 26px;
+  }
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+  .role-manager-wrapper {
+    padding: 16px;
+  }
+
+  .role-manager-card {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .role-manager-title {
+    font-size: 24px;
+  }
+
+  .role-search-row {
+    flex-direction: column;
+  }
+
+  .search-btn {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .role-manager-input,
+  .role-manager-select,
+  .role-manager-btn {
+    font-size: 14px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .role-manager-wrapper {
+    padding: 12px;
+  }
+
+  .role-manager-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .role-manager-title {
+    font-size: 21px;
+    margin-bottom: 16px;
+  }
+
+  .role-manager-label {
+    font-size: 14px;
+  }
+
+  .role-manager-input,
+  .role-manager-select {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .role-manager-btn {
+    padding: 11px 14px;
+    font-size: 13px;
+  }
+
+  .employee-details-card {
+    padding: 14px;
+  }
+
+  .employee-details-card p,
+  .role-message {
+    font-size: 13px;
+  }
+}
