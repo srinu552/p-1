@@ -1,17 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const pool = require("../config/db");
 
-/* ================= EMAIL TRANSPORTER ================= */
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* ================= COMMON RESPONSE FORMAT ================= */
 const sendResponse = (res, status, message, data = null) => {
@@ -24,9 +17,11 @@ const sendResponse = (res, status, message, data = null) => {
 
 /* ================= REGISTER ================= */
 exports.register = async (req, res) => {
-  const client = await pool.connect(); // 👈 important
+  let client;
 
   try {
+    client = await pool.connect();
+
     const {
       name,
       dept,
@@ -73,96 +68,130 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
+    await client.query("BEGIN");
+
     const existingUser = await client.query(
       "SELECT id FROM users WHERE email = $1",
       [email]
     );
 
     if (existingUser.rows.length > 0) {
+      await client.query("ROLLBACK");
       return res.status(409).json({ message: "Email already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    await client.query("BEGIN"); // 🔒 start transaction
-
-    // 🔍 STEP 1: Find rejected employee IDs
-const rejectedEmployees = await client.query(
-  `SELECT employee_id FROM users 
-   WHERE approval_status = 'rejected'
-   ORDER BY employee_id ASC
-   LIMIT 1`
-);
-
-let employeeId;
-
-if (rejectedEmployees.rows.length > 0) {
-  // ♻️ REUSE rejected ID
-  employeeId = rejectedEmployees.rows[0].employee_id;
-
-  // ❗ OPTIONAL: remove old rejected user OR mark reused
-  await client.query(
-    `DELETE FROM users WHERE employee_id = $1`,
-    [employeeId]
-  );
-
-} else {
-  // 🔢 NORMAL SEQUENCE
-  const lastEmployee = await client.query(
-    `SELECT employee_id FROM users
-     WHERE employee_id IS NOT NULL
-     ORDER BY id DESC
-     LIMIT 1
-     FOR UPDATE`
-  );
-
-  if (lastEmployee.rows.length === 0) {
-    employeeId = "PA-EMP-1000";
-  } else {
-    const lastId = lastEmployee.rows[0].employee_id;
-    const lastNumber = parseInt(lastId.split("-")[2]);
-    const newNumber = lastNumber + 1;
-
-    employeeId = `PA-EMP-${newNumber}`;
-  }
-}
-
-    await client.query(
-      `INSERT INTO users
-      (
-        name,
-        dept,
-        job_title,
-        start_date,
-        category,
-        gender,
-        actions,
-        email,
-        phone,
-        password,
-        role,
-        employee_id,
-        approval_status
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-      [
-        name,
-        dept,
-        jobTitle,
-        startDate,
-        category,
-        gender,
-        actions,
-        email,
-        phone,
-        hashedPassword,
-        "employee",
-        employeeId,
-        "pending",
-      ]
+    // 🔍 STEP 1: Find rejected employee IDs for reuse
+    const rejectedEmployees = await client.query(
+      `SELECT id, employee_id
+       FROM users
+       WHERE approval_status = 'rejected'
+         AND employee_id IS NOT NULL
+       ORDER BY id ASC
+       LIMIT 1
+       FOR UPDATE`
     );
 
-    await client.query("COMMIT"); // ✅ success
+    let employeeId;
+
+    if (rejectedEmployees.rows.length > 0) {
+      // ♻️ REUSE rejected ID WITHOUT deleting old row
+      const rejectedUserId = rejectedEmployees.rows[0].id;
+      employeeId = rejectedEmployees.rows[0].employee_id;
+
+      await client.query(
+        `UPDATE users
+         SET name = $1,
+             dept = $2,
+             job_title = $3,
+             start_date = $4,
+             category = $5,
+             gender = $6,
+             actions = $7,
+             email = $8,
+             phone = $9,
+             password = $10,
+             role = $11,
+             employee_id = $12,
+             approval_status = $13,
+             reset_token = NULL,
+             reset_token_expiry = NULL
+         WHERE id = $14`,
+        [
+          name,
+          dept,
+          jobTitle,
+          startDate,
+          category,
+          gender,
+          actions,
+          email,
+          phone,
+          hashedPassword,
+          "employee",
+          employeeId,
+          "pending",
+          rejectedUserId,
+        ]
+      );
+    } else {
+      // 🔢 NORMAL SEQUENCE
+      const lastEmployee = await client.query(
+        `SELECT employee_id
+         FROM users
+         WHERE employee_id IS NOT NULL
+         ORDER BY CAST(REGEXP_REPLACE(employee_id, '^.*-', '') AS INTEGER) DESC
+         LIMIT 1
+         FOR UPDATE`
+      );
+
+      if (lastEmployee.rows.length === 0) {
+        employeeId = "PA-EMP-1000";
+      } else {
+        const lastId = lastEmployee.rows[0].employee_id;
+        const lastNumber = parseInt(lastId.split("-").pop(), 10) || 999;
+        const newNumber = lastNumber + 1;
+        employeeId = `PA-EMP-${newNumber}`;
+      }
+
+      await client.query(
+        `INSERT INTO users
+        (
+          name,
+          dept,
+          job_title,
+          start_date,
+          category,
+          gender,
+          actions,
+          email,
+          phone,
+          password,
+          role,
+          employee_id,
+          approval_status
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [
+          name,
+          dept,
+          jobTitle,
+          startDate,
+          category,
+          gender,
+          actions,
+          email,
+          phone,
+          hashedPassword,
+          "employee",
+          employeeId,
+          "pending",
+        ]
+      );
+    }
+
+    await client.query("COMMIT");
 
     return res.status(201).json({
       message:
@@ -171,7 +200,10 @@ if (rejectedEmployees.rows.length > 0) {
       approval_status: "pending",
     });
   } catch (err) {
-    await client.query("ROLLBACK"); // ❌ rollback on error
+    if (client) {
+      await client.query("ROLLBACK").catch(() => {});
+    }
+
     console.error("❌ REGISTER ERROR:", err.message);
 
     if (err.code === "23505") {
@@ -182,7 +214,7 @@ if (rejectedEmployees.rows.length > 0) {
 
     return res.status(500).json({ message: "Server error" });
   } finally {
-    client.release(); // 🔓 release connection
+    if (client) client.release();
   }
 };
 
@@ -294,7 +326,8 @@ exports.login = async (req, res) => {
         job_title: user.job_title,
         approval_status: user.approval_status,
       },
-      redirectTo: actualRole === "admin" ? "/admindashboard" : "/employeedashboard",
+      redirectTo:
+        actualRole === "admin" ? "/admindashboard" : "/employeedashboard",
     });
   } catch (err) {
     console.error("❌ LOGIN ERROR:", err.message);
@@ -314,6 +347,7 @@ exports.forgotPassword = async (req, res) => {
       [email]
     );
 
+    // Always return same message for security
     if (result.rows.length === 0) {
       return sendResponse(res, 200, "If email exists, reset link sent");
     }
@@ -331,9 +365,9 @@ exports.forgotPassword = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset/${token}`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM,
+      to: [email],
       subject: "Password Reset Request",
       html: `
         <h3>Password Reset</h3>
@@ -342,6 +376,13 @@ exports.forgotPassword = async (req, res) => {
         <p>This link is valid for 15 minutes.</p>
       `,
     });
+
+    if (error) {
+      console.error("❌ RESEND ERROR:", error);
+      return sendResponse(res, 500, "Failed to send reset email");
+    }
+
+    console.log("✅ RESET EMAIL SENT:", data);
 
     return sendResponse(res, 200, "If email exists, reset link sent");
   } catch (err) {
@@ -361,9 +402,10 @@ exports.resetPassword = async (req, res) => {
     }
 
     const user = await pool.query(
-      `SELECT id, role FROM users
+      `SELECT id, role
+       FROM users
        WHERE reset_token = $1
-       AND reset_token_expiry > NOW()`,
+         AND reset_token_expiry > NOW()`,
       [token]
     );
 
