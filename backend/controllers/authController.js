@@ -1,19 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 const pool = require("../config/db");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",  // explicit host instead of service:"gmail"
-  port: 587,               // 587 with TLS (avoids IPv6 port 465)
-  secure: false,           // true for 465, false for 587
-  family: 4,               // ← FORCES IPv4, fixes Render's IPv6 issue
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASS,
-  },
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /* ================= COMMON RESPONSE FORMAT ================= */
 const sendResponse = (res, status, message, data = null) => {
@@ -374,9 +365,9 @@ exports.forgotPassword = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset/${token}`;
 
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER,
+    await sgMail.send({
       to: email,
+      from: process.env.SENDGRID_FROM_EMAIL,
       subject: "Password Reset Request",
       html: `
         <h3>Password Reset</h3>
