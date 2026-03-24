@@ -1,10 +1,16 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 const pool = require("../config/db");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASS,
+  },
+});
 
 /* ================= COMMON RESPONSE FORMAT ================= */
 const sendResponse = (res, status, message, data = null) => {
@@ -365,9 +371,9 @@ exports.forgotPassword = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset/${token}`;
 
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM,
-      to: [email],
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: email,
       subject: "Password Reset Request",
       html: `
         <h3>Password Reset</h3>
@@ -377,17 +383,12 @@ exports.forgotPassword = async (req, res) => {
       `,
     });
 
-    if (error) {
-      console.error("❌ RESEND ERROR:", error);
-      return sendResponse(res, 500, "Failed to send reset email");
-    }
-
-    console.log("✅ RESET EMAIL SENT:", data);
+    console.log("✅ RESET EMAIL SENT to:", email);
 
     return sendResponse(res, 200, "If email exists, reset link sent");
   } catch (err) {
-    console.error("❌ FORGOT PASSWORD ERROR:", err.message);
-    return sendResponse(res, 500, "Server error");
+    console.error("❌ FORGOT PASSWORD ERROR:", err);
+    return sendResponse(res, 500, "Failed to send reset email");
   }
 };
 

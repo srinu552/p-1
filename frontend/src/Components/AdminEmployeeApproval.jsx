@@ -254,7 +254,7 @@ function AdminEmployeeApproval() {
         )}
       </div>
     </div>
-  );
+  );  
 }
 
 export default AdminEmployeeApproval;
