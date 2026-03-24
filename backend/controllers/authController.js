@@ -5,7 +5,10 @@ const nodemailer = require("nodemailer");
 const pool = require("../config/db");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",  // explicit host instead of service:"gmail"
+  port: 587,               // 587 with TLS (avoids IPv6 port 465)
+  secure: false,           // true for 465, false for 587
+  family: 4,               // ← FORCES IPv4, fixes Render's IPv6 issue
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASS,
