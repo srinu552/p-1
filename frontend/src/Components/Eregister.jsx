@@ -22,7 +22,6 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // added
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -92,18 +91,32 @@ const Register = () => {
   const EyeIcon = ({ open }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      fill="currentColor"
-      viewBox="0 0 16 16"
+      width="22"
+      height="22"
+      fill="none"
+      viewBox="0 0 24 24"
     >
-      {open ? (
-        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.12 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
-      ) : (
-        <>
-          <path d="M13.359 11.238 15 12.879l-.707.707-14-14 .707-.707 2.223 2.223A8.717 8.717 0 0 1 8 2.5c5 0 8 5.5 8 5.5a15.29 15.29 0 0 1-2.64 3.238zM11.297 9.176l-1.275-1.275a2 2 0 0 1-2.626-2.626L6.121 4a3 3 0 0 0 5.176 5.176z" />
-          <path d="M3.98 5.394 5.59 7.005a3 3 0 0 0 3.404 3.404l1.61 1.61A7.862 7.862 0 0 1 8 12.5c-5 0-8-5.5-8-5.5a15.724 15.724 0 0 1 3.98-4.606z" />
-        </>
+      <path
+        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      {open && (
+        <path
+          d="M4 20L20 4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       )}
     </svg>
   );
@@ -158,16 +171,49 @@ const Register = () => {
           font-weight: 500;
           cursor: pointer;
         }
-        .password-group .form-control {
-          border-right: 0;
+
+        .password-wrap {
+          position: relative;
         }
-        .password-toggle {
-          border: 1.5px solid #e3c7c7;
-          border-left: 0;
+
+        .password-input {
+          height: 56px;
+          border: 1.5px solid #d9d9d9;
+          border-radius: 16px;
+          padding-right: 78px;
           background: #fff;
-          color: #233a8b;
         }
-        .password-toggle:focus {
+
+        .password-input:focus {
+          border-color: #233a8b;
+          box-shadow: none;
+        }
+
+        .eye-btn {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 74px;
+          height: 56px;
+          border: 1.5px solid #d9d9d9;
+          border-left: 1.5px solid #d9d9d9;
+          border-radius: 0 16px 16px 0;
+          background: #fff;
+          color: #666;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          padding: 0;
+        }
+
+        .eye-btn:hover {
+          background: #fafafa;
+          color: #333;
+        }
+
+        .eye-btn:focus {
+          outline: none;
           box-shadow: none;
           border-color: #233a8b;
         }
@@ -180,13 +226,21 @@ const Register = () => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label>Name(s)</label>
-              <input name="name" className="form-control" onChange={handleChange} />
+              <input
+                name="name"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.name}</div>
             </div>
 
             <div className="col-md-6 mb-3">
               <label>Department</label>
-              <input name="dept" className="form-control" onChange={handleChange} />
+              <input
+                name="dept"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.dept}</div>
             </div>
           </div>
@@ -194,13 +248,22 @@ const Register = () => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label>Job Title</label>
-              <input name="jobTitle" className="form-control" onChange={handleChange} />
+              <input
+                name="jobTitle"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.jobTitle}</div>
             </div>
 
             <div className="col-md-6 mb-3">
               <label>Start Date</label>
-              <input type="date" name="startDate" className="form-control" onChange={handleChange} />
+              <input
+                type="date"
+                name="startDate"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.startDate}</div>
             </div>
           </div>
@@ -208,13 +271,21 @@ const Register = () => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label>Category</label>
-              <input name="category" className="form-control" onChange={handleChange} />
+              <input
+                name="category"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.category}</div>
             </div>
 
             <div className="col-md-6 mb-3">
               <label>Gender</label>
-              <select name="gender" className="form-control" onChange={handleChange}>
+              <select
+                name="gender"
+                className="form-control"
+                onChange={handleChange}
+              >
                 <option value="">Select Gender</option>
                 <option>Male</option>
                 <option>Female</option>
@@ -226,20 +297,32 @@ const Register = () => {
 
           <div className="mb-3">
             <label>Actions</label>
-            <input name="actions" className="form-control" onChange={handleChange} />
+            <input
+              name="actions"
+              className="form-control"
+              onChange={handleChange}
+            />
             <div className="error">{errors.actions}</div>
           </div>
 
           <div className="row">
             <div className="col-md-6 mb-3">
               <label>Email Address</label>
-              <input name="email" className="form-control" onChange={handleChange} />
+              <input
+                name="email"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.email}</div>
             </div>
 
             <div className="col-md-6 mb-3">
               <label>Phone Number</label>
-              <input name="phone" className="form-control" onChange={handleChange} />
+              <input
+                name="phone"
+                className="form-control"
+                onChange={handleChange}
+              />
               <div className="error">{errors.phone}</div>
             </div>
           </div>
@@ -247,16 +330,16 @@ const Register = () => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label>Password</label>
-              <div className="input-group password-group">
+              <div className="password-wrap">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  className="form-control"
+                  className="form-control password-input"
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="btn password-toggle"
+                  className="eye-btn"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -268,18 +351,22 @@ const Register = () => {
 
             <div className="col-md-6 mb-3">
               <label>Confirm Password</label>
-              <div className="input-group password-group">
+              <div className="password-wrap">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
-                  className="form-control"
+                  className="form-control password-input"
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="btn password-toggle"
+                  className="eye-btn"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
                 >
                   <EyeIcon open={showConfirmPassword} />
                 </button>
@@ -289,7 +376,12 @@ const Register = () => {
           </div>
 
           <div className="form-check mb-2">
-            <input type="checkbox" name="agree" className="form-check-input" onChange={handleChange} />
+            <input
+              type="checkbox"
+              name="agree"
+              className="form-check-input"
+              onChange={handleChange}
+            />
             <label className="form-check-label">
               I agree to the <span className="link">Terms</span> &{" "}
               <span className="link">Privacy Policy</span>
@@ -313,4 +405,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Register;  
