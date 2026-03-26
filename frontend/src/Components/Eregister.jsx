@@ -22,6 +22,10 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // added
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
@@ -85,6 +89,25 @@ const Register = () => {
     }
   };
 
+  const EyeIcon = ({ open }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      fill="currentColor"
+      viewBox="0 0 16 16"
+    >
+      {open ? (
+        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.12 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+      ) : (
+        <>
+          <path d="M13.359 11.238 15 12.879l-.707.707-14-14 .707-.707 2.223 2.223A8.717 8.717 0 0 1 8 2.5c5 0 8 5.5 8 5.5a15.29 15.29 0 0 1-2.64 3.238zM11.297 9.176l-1.275-1.275a2 2 0 0 1-2.626-2.626L6.121 4a3 3 0 0 0 5.176 5.176z" />
+          <path d="M3.98 5.394 5.59 7.005a3 3 0 0 0 3.404 3.404l1.61 1.61A7.862 7.862 0 0 1 8 12.5c-5 0-8-5.5-8-5.5a15.724 15.724 0 0 1 3.98-4.606z" />
+        </>
+      )}
+    </svg>
+  );
+
   return (
     <div className="container-fluid register-bg">
       <style>{`
@@ -134,6 +157,19 @@ const Register = () => {
           color: #233a8b;
           font-weight: 500;
           cursor: pointer;
+        }
+        .password-group .form-control {
+          border-right: 0;
+        }
+        .password-toggle {
+          border: 1.5px solid #e3c7c7;
+          border-left: 0;
+          background: #fff;
+          color: #233a8b;
+        }
+        .password-toggle:focus {
+          box-shadow: none;
+          border-color: #233a8b;
         }
       `}</style>
 
@@ -211,13 +247,43 @@ const Register = () => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label>Password</label>
-              <input type="password" name="password" className="form-control" onChange={handleChange} />
+              <div className="input-group password-group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  className="form-control"
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="btn password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </div>
               <div className="error">{errors.password}</div>
             </div>
 
             <div className="col-md-6 mb-3">
               <label>Confirm Password</label>
-              <input type="password" name="confirmPassword" className="form-control" onChange={handleChange} />
+              <div className="input-group password-group">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  className="form-control"
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="btn password-toggle"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                >
+                  <EyeIcon open={showConfirmPassword} />
+                </button>
+              </div>
               <div className="error">{errors.confirmPassword}</div>
             </div>
           </div>
