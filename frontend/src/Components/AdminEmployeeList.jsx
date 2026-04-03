@@ -32,8 +32,14 @@ export default function AdminEmployeeList() {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
 
-      const result = await res.json();
-      setEmployees(Array.isArray(result.data) ? result.data : []);
+    const result = await res.json();
+    setEmployees(
+      Array.isArray(result)
+        ? result
+        : Array.isArray(result.data)
+        ? result.data
+        : []
+    );
     } catch (err) {
       console.error("Fetch error:", err.message);
       setError("Failed to load employees");

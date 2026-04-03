@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 
-// ================= GET ALL EMPLOYEES =================
+// ================= GET ALL EMPLOYEES + MANAGERS =================
 exports.getEmployees = async (req, res, next) => {
   try {
     const result = await pool.query(
@@ -16,10 +16,10 @@ exports.getEmployees = async (req, res, next) => {
         gender,
         actions,
         phone,
-        role,
+        LOWER(TRIM(role)) AS role,
         approval_status
        FROM users
-       WHERE role = 'employee'
+       WHERE LOWER(TRIM(role)) IN ('employee', 'manager')
        ORDER BY id DESC`
     );
 
@@ -33,7 +33,7 @@ exports.getEmployees = async (req, res, next) => {
   }
 };
 
-// ================= GET SINGLE EMPLOYEE =================
+// ================= GET SINGLE EMPLOYEE / MANAGER =================
 exports.getEmployee = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -51,17 +51,18 @@ exports.getEmployee = async (req, res, next) => {
         gender,
         actions,
         phone,
-        role,
+        LOWER(TRIM(role)) AS role,
         approval_status
        FROM users
-       WHERE id = $1 AND role = 'employee'`,
+       WHERE id = $1
+         AND LOWER(TRIM(role)) IN ('employee', 'manager')`,
       [id]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Employee not found",
+        message: "Employee/Manager not found",
       });
     }
 
@@ -74,7 +75,7 @@ exports.getEmployee = async (req, res, next) => {
   }
 };
 
-// ================= UPDATE EMPLOYEE =================
+// ================= UPDATE EMPLOYEE / MANAGER =================
 exports.updateEmployee = async (req, res, next) => {
   const client = await pool.connect();
 
@@ -94,7 +95,10 @@ exports.updateEmployee = async (req, res, next) => {
     } = req.body;
 
     const existingEmployee = await client.query(
-      `SELECT * FROM users WHERE id = $1 AND role = 'employee'`,
+      `SELECT * 
+       FROM users 
+       WHERE id = $1
+         AND LOWER(TRIM(role)) IN ('employee', 'manager')`,
       [id]
     );
 
@@ -102,7 +106,7 @@ exports.updateEmployee = async (req, res, next) => {
       await client.query("ROLLBACK");
       return res.status(404).json({
         success: false,
-        message: "Employee not found for update",
+        message: "Employee/Manager not found for update",
       });
     }
 
@@ -122,7 +126,9 @@ exports.updateEmployee = async (req, res, next) => {
     }
 
     const duplicateCheck = await client.query(
-      `SELECT id FROM users WHERE employee_id = $1 AND id != $2`,
+      `SELECT id 
+       FROM users 
+       WHERE employee_id = $1 AND id != $2`,
       [finalEmployeeId, id]
     );
 
@@ -144,7 +150,8 @@ exports.updateEmployee = async (req, res, next) => {
            category = $6,
            gender = $7,
            actions = $8
-       WHERE id = $9 AND role = 'employee'
+       WHERE id = $9
+         AND LOWER(TRIM(role)) IN ('employee', 'manager')
        RETURNING 
          id,
          employee_id,
@@ -157,7 +164,7 @@ exports.updateEmployee = async (req, res, next) => {
          gender,
          actions,
          phone,
-         role,
+         LOWER(TRIM(role)) AS role,
          approval_status`,
       [
         finalEmployeeId,
@@ -172,7 +179,6 @@ exports.updateEmployee = async (req, res, next) => {
       ]
     );
 
-    // update payroll table also
     await client.query(
       `UPDATE payrolls
        SET employee_id = $1
@@ -184,7 +190,7 @@ exports.updateEmployee = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Employee and payroll employee ID updated successfully",
+      message: "Employee/Manager and payroll employee ID updated successfully",
       data: result.rows[0],
     });
   } catch (error) {
@@ -195,31 +201,36 @@ exports.updateEmployee = async (req, res, next) => {
   }
 };
 
-// ================= DELETE EMPLOYEE =================
+// ================= DELETE EMPLOYEE / MANAGER =================
 exports.deleteEmployee = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const existingEmployee = await pool.query(
-      `SELECT id FROM users WHERE id = $1 AND role = 'employee'`,
+      `SELECT id 
+       FROM users 
+       WHERE id = $1
+         AND LOWER(TRIM(role)) IN ('employee', 'manager')`,
       [id]
     );
 
     if (existingEmployee.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Employee not found",
+        message: "Employee/Manager not found",
       });
     }
 
     await pool.query(
-      `DELETE FROM users WHERE id = $1 AND role = 'employee'`,
+      `DELETE FROM users
+       WHERE id = $1
+         AND LOWER(TRIM(role)) IN ('employee', 'manager')`,
       [id]
     );
 
     res.status(200).json({
       success: true,
-      message: "Employee deleted successfully",
+      message: "Employee/Manager deleted successfully",
     });
   } catch (error) {
     next(error);

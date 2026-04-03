@@ -10,537 +10,267 @@ import AdminRoleManager from "./AdminRoleManager";
 import AdminManagerReview from "./AdminManagerReview";
 import AdminPerformanceReviews from "./AdminPerformanceReviews";
 
+/* ── Icon map for sidebar menu items ── */
+const ICONS = {
+  Dashboard:           "⊞",
+  Attendance:          "📅",
+  "Admin Approval":    "✅",
+  Employees:           "👥",
+  Roles:               "🛡",
+  "Leave Management":  "🌿",
+  Payroll:             "💳",
+  "Review Managers":   "⭐",
+  "Performance Reviews":"📊",
+};
+
+const menuSections = [
+  { title: "MAIN",         items: ["Dashboard", "Attendance"] },
+  { title: "ORGANIZATION", items: ["Admin Approval", "Employees", "Roles", "Leave Management", "Payroll", "Review Managers", "Performance Reviews"] },
+];
+
+const AnimatedNumber = ({ value }) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const inc = value / (600 / 16);
+    const t = setInterval(() => {
+      start += inc;
+      if (start >= value) { setCount(value); clearInterval(t); }
+      else setCount(Math.floor(start));
+    }, 16);
+    return () => clearInterval(t);
+  }, [value]);
+  return <h4>{count}</h4>;
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  const [employees, setEmployees] = useState([]);
-  const [taskForm, setTaskForm] = useState({
-    employeeId: "",
-    title: "",
-    dueDate: "",
-    priority: "Medium",
-  });
-  const [recentTasks, setRecentTasks] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
-  const [activePage, setActivePage] = useState("Dashboard");
-  const [darkMode, setDarkMode] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [search, setSearch] = useState("");
-  const [announcementInput, setAnnouncementInput] = useState("");
-  const [announcements, setAnnouncements] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
+  const [employees,          setEmployees]          = useState([]);
+  const [taskForm,           setTaskForm]           = useState({ employeeId: "", title: "", dueDate: "", priority: "Medium" });
+  const [recentTasks,        setRecentTasks]        = useState([]);
+  const [sidebarOpen,        setSidebarOpen]        = useState(window.innerWidth > 768);
+  const [activePage,         setActivePage]         = useState("Dashboard");
+  const [darkMode,           setDarkMode]           = useState(false);
+  const [showProfile,        setShowProfile]        = useState(false);
+  const [showNotification,   setShowNotification]   = useState(false);
+  const [search,             setSearch]             = useState("");
+  const [announcementInput,  setAnnouncementInput]  = useState("");
+  const [announcements,      setAnnouncements]      = useState([]);
+  const [isMobile,           setIsMobile]           = useState(window.innerWidth <= 768);
   const [selectedPayrollEmployee, setSelectedPayrollEmployee] = useState(null);
 
-  const menuSections = [
-  {
-    title: "MAIN",
-    items: ["Dashboard", "Attendance"],
-  },
-  {
-    title: "ORGANIZATION",
-    items: [
-      "Admin Approval",
-      "Employees",
-      "Roles",
-      "Leave Management",
-      "Payroll",
-      "Review Managers",
-      "Performance Reviews",
-    ],
-  },
-];
   const getToken = () => localStorage.getItem("adminToken");
-
-  const handleApiError = (label, error) => {
-    console.error(`${label}:`, error);
-  };
 
   const normalizeEmployee = (emp) => ({
     ...emp,
-    name: emp.name || emp.full_name || "",
-    email: emp.email || "",
-    dept: emp.dept || emp.department || "",
-    job_title: emp.job_title || emp.designation || "",
+    name:        emp.name || emp.full_name || "",
+    email:       emp.email || "",
+    dept:        emp.dept || emp.department || "",
+    job_title:   emp.job_title || emp.designation || "",
     employee_id: emp.employee_id || "",
   });
 
   const stats = [
-    { title: "Attendance", count: recentTasks.length },
-    { title: "Employees", count: employees.length },
+    { title: "Attendance Records", count: recentTasks.length, icon: "📅", color: "#7c3aed" },
+    { title: "Total Employees",    count: employees.length,   icon: "👥", color: "#2563eb" },
   ];
 
-  const filteredEmployees = employees.filter((emp) => {
-    const searchValue = search.toLowerCase().trim();
-
-    return (
-      emp.name?.toLowerCase().includes(searchValue) ||
-      emp.email?.toLowerCase().includes(searchValue) ||
-      emp.dept?.toLowerCase().includes(searchValue) ||
-      emp.job_title?.toLowerCase().includes(searchValue) ||
-      emp.employee_id?.toLowerCase().includes(searchValue)
-    );
+  const filteredEmployees = employees.filter(emp => {
+    const v = search.toLowerCase().trim();
+    return [emp.name, emp.email, emp.dept, emp.job_title, emp.employee_id]
+      .some(f => String(f || "").toLowerCase().includes(v));
   });
 
-  const selectedEmployee = employees.find(
-    (emp) => String(emp.id) === String(taskForm.employeeId)
-  );
+  const selectedEmployee = employees.find(e => String(e.id) === String(taskForm.employeeId));
 
-  const getPriorityClass = (priority) => {
-    const value = String(priority || "Medium").toLowerCase();
-
-    if (value === "high") return "priority-high";
-    if (value === "low") return "priority-low";
+  const getPriorityClass = (p) => {
+    const v = String(p || "Medium").toLowerCase();
+    if (v === "high") return "priority-high";
+    if (v === "low")  return "priority-low";
     return "priority-medium";
   };
 
-  // TASK -> numeric database id
   const handleEmployeeSelect = (emp) => {
-    setTaskForm((prev) => ({
-      ...prev,
-      employeeId: emp.id,
-    }));
+    setTaskForm(prev => ({ ...prev, employeeId: emp.id }));
     setSearch(emp.name || emp.employee_id || "");
   };
-
-  // PAYROLL -> keep full employee object with employee_id like PA-EMP-7298
   const handlePayrollEmployeeSelect = (emp) => {
     setSelectedPayrollEmployee(emp);
     setSearch(emp.name || emp.employee_id || "");
   };
-
   const handleMenuClick = (item) => {
     setActivePage(item);
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
+    if (isMobile) setSidebarOpen(false);
     setShowProfile(false);
     setShowNotification(false);
   };
 
   const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  localStorage.removeItem("adminToken");
-  localStorage.removeItem("adminUser");
-  localStorage.removeItem("employeeToken");
-  localStorage.removeItem("employeeUser");
-  localStorage.removeItem("managerToken");
-  localStorage.removeItem("managerUser");
-  navigate("/adminlogin");
-};
+    ["token","user","adminToken","adminUser","employeeToken","employeeUser","managerToken","managerUser"]
+      .forEach(k => localStorage.removeItem(k));
+    navigate("/adminlogin");
+  };
 
+  /* ── API calls ── */
   const fetchEmployees = async () => {
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/employees`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        setEmployees([]);
-        return;
-      }
-
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/employees`, { headers: { Authorization: `Bearer ${getToken()}` } });
       const data = await res.json();
-
-      const employeeList = Array.isArray(data)
-        ? data
-        : Array.isArray(data.data)
-        ? data.data
-        : [];
-
-      const normalizedData = employeeList.map(normalizeEmployee);
-
-      setEmployees(normalizedData);
-    } catch (err) {
-      handleApiError("Fetch Employees Error", err);
-      setEmployees([]);
-    }
+      const list = Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : [];
+      setEmployees(list.map(normalizeEmployee));
+    } catch { setEmployees([]); }
   };
-
   const fetchAnnouncements = async () => {
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/announcements`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        setAnnouncements([]);
-        return;
-      }
-
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/announcements`, { headers: { Authorization: `Bearer ${getToken()}` } });
       const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setAnnouncements(data);
-      } else if (Array.isArray(data.data)) {
-        setAnnouncements(data.data);
-      } else {
-        setAnnouncements([]);
-      }
-    } catch (error) {
-      handleApiError("Fetch Announcement Error", error);
-      setAnnouncements([]);
-    }
+      setAnnouncements(Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []);
+    } catch { setAnnouncements([]); }
   };
-
   const addAnnouncement = async () => {
-    if (!announcementInput.trim()) {
-      alert("Please enter announcement");
-      return;
-    }
-
+    if (!announcementInput.trim()) return alert("Please enter announcement");
     try {
-      const token = getToken();
-      if (!token) return;
-
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/announcements`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({ text: announcementInput.trim() }),
       });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        alert(data.message || "Failed to add announcement");
-        return;
-      }
-
-      setAnnouncementInput("");
-      fetchAnnouncements();
-    } catch (error) {
-      handleApiError("Add Announcement Error", error);
-      alert("Something went wrong while adding announcement");
-    }
+      if (!res.ok) { const d = await res.json(); return alert(d.message || "Failed"); }
+      setAnnouncementInput(""); fetchAnnouncements();
+    } catch { alert("Something went wrong"); }
   };
-
   const deleteAnnouncement = async (id) => {
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/admin/announcements/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) {
-        alert("Failed to delete announcement");
-        return;
-      }
-
-      setAnnouncements((prev) =>
-        prev.filter((item) => (item.id || item.announcement_id) !== id)
-      );
-    } catch (error) {
-      handleApiError("Delete Announcement Error", error);
-      alert("Something went wrong while deleting announcement");
-    }
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/announcements/${id}`, {
+        method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!res.ok) return alert("Failed to delete");
+      setAnnouncements(prev => prev.filter(item => (item.id || item.announcement_id) !== id));
+    } catch { alert("Something went wrong"); }
   };
-
   const fetchTasks = async () => {
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        setRecentTasks([]);
-        return;
-      }
-
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks`, { headers: { Authorization: `Bearer ${getToken()}` } });
       const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setRecentTasks(data);
-      } else if (Array.isArray(data.tasks)) {
-        setRecentTasks(data.tasks);
-      } else {
-        setRecentTasks([]);
-      }
-    } catch (error) {
-      handleApiError("Fetch Tasks Error", error);
-      setRecentTasks([]);
-    }
+      setRecentTasks(Array.isArray(data) ? data : Array.isArray(data.tasks) ? data.tasks : []);
+    } catch { setRecentTasks([]); }
   };
-
   const assignTask = async () => {
-    if (!taskForm.employeeId || !taskForm.title.trim()) {
-      alert("Fill required fields");
-      return;
-    }
-
+    if (!taskForm.employeeId || !taskForm.title.trim()) return alert("Fill required fields");
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const currentEmployee = employees.find(
-        (emp) => String(emp.id) === String(taskForm.employeeId)
-      );
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/create`, {
+      const emp = employees.find(e => String(e.id) === String(taskForm.employeeId));
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_id: taskForm.employeeId,
-          title: taskForm.title.trim(),
-          due_date: taskForm.dueDate || null,
-          priority: taskForm.priority,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ user_id: taskForm.employeeId, title: taskForm.title.trim(), due_date: taskForm.dueDate || null, priority: taskForm.priority }),
       });
-
       const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        alert(data.message || "Task creation failed");
-        return;
-      }
-
-      const newTask = {
-        ...data,
-        name: data.name || currentEmployee?.name || "N/A",
-        employee_name: data.employee_name || currentEmployee?.name || "N/A",
-        priority: data.priority || taskForm.priority,
-        due_date: data.due_date || taskForm.dueDate || null,
-      };
-
-      setRecentTasks((prev) => [newTask, ...prev]);
-
-      setTaskForm({
-        employeeId: "",
-        title: "",
-        dueDate: "",
-        priority: "Medium",
-      });
+      if (!res.ok) return alert(data.message || "Task creation failed");
+      setRecentTasks(prev => [{ ...data, name: data.name || emp?.name || "N/A", employee_name: data.employee_name || emp?.name || "N/A", priority: data.priority || taskForm.priority, due_date: data.due_date || taskForm.dueDate || null }, ...prev]);
+      setTaskForm({ employeeId: "", title: "", dueDate: "", priority: "Medium" });
       setSearch("");
-    } catch (error) {
-      handleApiError("Assign Task Error", error);
-      alert("Something went wrong while assigning task");
-    }
+    } catch { alert("Something went wrong"); }
   };
-
   const deleteTask = async (id) => {
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        alert("Failed to delete task");
-        return;
-      }
-
-      setRecentTasks((prev) => prev.filter((task) => task.id !== id));
-    } catch (error) {
-      handleApiError("Delete Task Error", error);
-      alert("Something went wrong while deleting task");
-    }
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
+      if (!res.ok) return alert("Failed to delete task");
+      setRecentTasks(prev => prev.filter(t => t.id !== id));
+    } catch { alert("Something went wrong"); }
   };
-
   const updateTask = async (task) => {
+    const newTitle = prompt("Edit Task Title:", task.title);
+    if (!newTitle?.trim()) return;
     try {
-      const token = getToken();
-      if (!token) return;
-
-      const newTitle = prompt("Edit Task Title:", task.title);
-
-      if (!newTitle || !newTitle.trim()) return;
-
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/tasks/${task.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: newTitle.trim(),
-          due_date: task.due_date || null,
-          priority: task.priority || "Medium",
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ title: newTitle.trim(), due_date: task.due_date || null, priority: task.priority || "Medium" }),
       });
-
-      const updatedData = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        alert("Update failed");
-        return;
-      }
-
-      if (updatedData) {
-        setRecentTasks((prev) =>
-          prev.map((item) =>
-            item.id === task.id ? { ...item, ...updatedData } : item
-          )
-        );
-      } else {
-        fetchTasks();
-      }
-    } catch (error) {
-      handleApiError("Update Task Error", error);
-      alert("Something went wrong while updating task");
-    }
+      const updated = await res.json().catch(() => null);
+      if (!res.ok) return alert("Update failed");
+      updated
+        ? setRecentTasks(prev => prev.map(i => i.id === task.id ? { ...i, ...updated } : i))
+        : fetchTasks();
+    } catch { alert("Something went wrong"); }
   };
 
   useEffect(() => {
-    fetchAnnouncements();
-    fetchEmployees();
-    fetchTasks();
+    fetchAnnouncements(); fetchEmployees(); fetchTasks();
   }, []);
-
   useEffect(() => {
-    const handleResize = () => {
-      const mobileView = window.innerWidth <= 768;
-      setIsMobile(mobileView);
-
-      if (!mobileView) {
-        setSidebarOpen(true);
-      }
+    const onResize = () => {
+      const mob = window.innerWidth <= 768;
+      setIsMobile(mob);
+      if (!mob) setSidebarOpen(true);
     };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const AnimatedNumber = ({ value }) => {
-    const [count, setCount] = useState(0);
-
-    useEffect(() => {
-      let start = 0;
-      const duration = 600;
-      const stepTime = 16;
-      const increment = value / (duration / stepTime);
-
-      const counter = setInterval(() => {
-        start += increment;
-
-        if (start >= value) {
-          setCount(value);
-          clearInterval(counter);
-        } else {
-          setCount(Math.floor(start));
-        }
-      }, stepTime);
-
-      return () => clearInterval(counter);
-    }, [value]);
-
-    return <h4>{count}</h4>;
-  };
-
+  /* ─────────────────────────────────────
+     RENDER
+  ───────────────────────────────────── */
   return (
     <div className={`admin-dashboard ${darkMode ? "dark-mode" : ""}`}>
+
+      {/* ── SIDEBAR ── */}
       <div className={`sidebar ${sidebarOpen ? "open" : "collapsed"}`}>
-        <div className="sidebar-title">{sidebarOpen ? "Path Axiom" : "X"}</div>
+        <div className="sidebar-brand">
+          <div className="sidebar-brand-icon">⚡</div>
+          <div className="sidebar-brand-name">Path Axiom</div>
+        </div>
 
-        {menuSections.map((section, index) => (
-          <div key={index}>
-            {sidebarOpen && <div className="section-heading">{section.title}</div>}
-
-            {section.items.map((item, i) => (
-              <div
-                key={i}
-                className={`menu-item ${activePage === item ? "active" : ""}`}
-                onClick={() => handleMenuClick(item)}
-              >
-                {sidebarOpen ? item : item.charAt(0)}
-              </div>
-            ))}
-          </div>
-        ))}
+        <div className="sidebar-nav">
+          {menuSections.map((section, si) => (
+            <div key={si}>
+              <div className="section-heading">{section.title}</div>
+              {section.items.map((item, ii) => (
+                <div
+                  key={ii}
+                  className={`menu-item ${activePage === item ? "active" : ""}`}
+                  onClick={() => handleMenuClick(item)}
+                  title={!sidebarOpen ? item : ""}
+                >
+                  <span className="menu-icon">{ICONS[item] || "•"}</span>
+                  <span className="menu-label">{item}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* Mobile overlay */}
       {sidebarOpen && isMobile && (
-        <div
-          className="overlay"
-          onClick={() => {
-            setSidebarOpen(false);
-            setShowProfile(false);
-            setShowNotification(false);
-          }}
-        ></div>
+        <div className="overlay" onClick={() => { setSidebarOpen(false); setShowProfile(false); setShowNotification(false); }} />
       )}
 
-      <div
-        className={`content ${
-          sidebarOpen && !isMobile
-            ? "content-expanded"
-            : !isMobile
-            ? "content-collapsed"
-            : "content-mobile"
-        }`}
-      >
+      {/* ── MAIN CONTENT ── */}
+      <div className={`content ${sidebarOpen && !isMobile ? "content-expanded" : !isMobile ? "content-collapsed" : "content-mobile"}`}>
+
+        {/* Topbar */}
         <div className="header">
           <div className="top-bar">
-            <span
-              className="menu-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              ☰
-            </span>
-
-            <div className="btn btn-primary rounded-pill">All Candidates ▼</div>
-
+            <span className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</span>
+            <div className="page-chip">{activePage}</div>
             <div className="search-box">
               <span className="search-icon">🔍</span>
               <input
                 type="text"
-                placeholder="Search employee by name, email, department, designation, employee id..."
+                placeholder="Search employee by name, email, dept, ID…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="d-flex align-items-center header-actions">
-            <div
-              className="icon-btn"
-              onClick={() => setDarkMode(!darkMode)}
-              title="Toggle Theme"
-            >
+          <div className="header-actions">
+            <div className="icon-btn" onClick={() => setDarkMode(!darkMode)} title="Toggle theme">
               {darkMode ? "🌙" : "☀️"}
             </div>
-
-            <div
-              className="icon-btn dropdown-parent"
-              onClick={() => {
-                setShowNotification(!showNotification);
-                setShowProfile(false);
-              }}
-            >
+            <div className="icon-btn dropdown-parent" onClick={() => { setShowNotification(!showNotification); setShowProfile(false); }}>
               🔔
               {showNotification && (
                 <div className="dropdown-box">
@@ -548,375 +278,197 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
-
-            <div
-              className="icon-btn dropdown-parent"
-              onClick={() => {
-                setShowProfile(!showProfile);
-                setShowNotification(false);
-              }}
-            >
+            <div className="icon-btn dropdown-parent" onClick={() => { setShowProfile(!showProfile); setShowNotification(false); }}>
               👤
               {showProfile && (
                 <div className="dropdown-box">
-                  <div
-                    onClick={() => navigate("/admin-profile")}
-                    style={{ cursor: "pointer" }}
-                  >
-                    Profile
-                  </div>
-                  <div onClick={handleLogout} className="logout-text">
-                    Logout
-                  </div>
+                  <div onClick={() => navigate("/admin-profile")}>Profile</div>
+                  <div onClick={handleLogout} className="logout-text">Logout</div>
                 </div>
               )}
             </div>
           </div>
         </div>
 
+        {/* ── DASHBOARD PAGE ── */}
         {activePage === "Dashboard" && (
           <>
-            <div className="row">
-              {stats.map((item, index) => (
-                <div className="col-md-3 mb-4" key={index}>
-                  <div className="stat-card">
-                    <AnimatedNumber value={item.count} />
-                    <p>{item.title}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* Stat cards */}
+           
 
-            <div className="row mt-4">
-              {search && (
-                <div className="col-12">
-                  <div className="card custom-card p-3 mb-4">
-                    <h5>Search Results</h5>
-
-                    {filteredEmployees.length === 0 ? (
-                      <p>No employees found</p>
-                    ) : (
-                      filteredEmployees.map((emp) => (
-                        <div
-                          key={emp.id}
-                          className={`search-result-item p-3 mb-2 ${
-                            String(taskForm.employeeId) === String(emp.id)
-                              ? "selected-search-result"
-                              : ""
-                          }`}
-                        >
-                          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <div>
-                              <strong>{emp.name || "No Name"}</strong>
-                              <div>Employee ID: {emp.employee_id || "N/A"}</div>
-                              <div>Email: {emp.email || "N/A"}</div>
-                              <div>Department: {emp.dept || "N/A"}</div>
-                              <div>Designation: {emp.job_title || "N/A"}</div>
-                            </div>
-
-                            <button
-                              className="btn btn-sm btn-primary"
-                              onClick={() => handleEmployeeSelect(emp)}
-                            >
-                              Assign Task
-                            </button>
-                          </div>
+            {/* Search results */}
+            {search && (
+              <div className="custom-card p-4 mb-4">
+                <div className="card-section-title">Search Results</div>
+                {filteredEmployees.length === 0 ? (
+                  <p style={{ color: "var(--text-faint)", fontSize: 13 }}>No employees found</p>
+                ) : filteredEmployees.map(emp => (
+                  <div key={emp.id} className={`search-result-item ${String(taskForm.employeeId) === String(emp.id) ? "selected-search-result" : ""}`}>
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                      <div>
+                        <strong style={{ fontSize: 14 }}>{emp.name || "No Name"}</strong>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                          {emp.employee_id || "N/A"} · {emp.email || "N/A"} · {emp.dept || "N/A"} · {emp.job_title || "N/A"}
                         </div>
-                      ))
-                    )}
+                      </div>
+                      <button className="btn btn-sm btn-primary" onClick={() => handleEmployeeSelect(emp)}>Assign Task</button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+            )}
 
+            <div className="row g-4">
+              {/* Assign Task */}
               <div className="col-md-6">
-                <div className="card custom-card p-3 mb-4">
-                  <h5>Assign Task</h5>
+                <div className="custom-card p-4 h-100">
+                  <div className="card-section-title">Assign Task</div>
 
                   {selectedEmployee && (
                     <div className="selected-employee-box mb-3">
-                      <div>
-                        <strong>Selected Employee:</strong>{" "}
-                        {selectedEmployee.name || "No Name"}
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{selectedEmployee.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>
+                        {selectedEmployee.employee_id} · {selectedEmployee.dept}
                       </div>
-                      <div>Employee ID: {selectedEmployee.employee_id || "N/A"}</div>
-                      <div>Email: {selectedEmployee.email || "N/A"}</div>
-                      <div>Department: {selectedEmployee.dept || "N/A"}</div>
-                      <button
-                        className="btn btn-sm btn-outline-danger mt-2"
-                        onClick={() =>
-                          setTaskForm((prev) => ({ ...prev, employeeId: "" }))
-                        }
-                      >
-                        Clear Selection
+                      <button className="btn btn-sm btn-outline-danger mt-2" onClick={() => setTaskForm(p => ({ ...p, employeeId: "" }))}>
+                        Clear
                       </button>
                     </div>
                   )}
 
-                  <select
-                    className="form-select mb-2"
-                    value={taskForm.employeeId}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, employeeId: e.target.value })
-                    }
-                  >
+                  <select className="form-select mb-2" value={taskForm.employeeId} onChange={e => setTaskForm({ ...taskForm, employeeId: e.target.value })}>
                     <option value="">Select Employee</option>
-                    {employees.map((emp) => (
+                    {employees.map(emp => (
                       <option key={emp.id} value={emp.id}>
-                        {(emp.name || "No Name")} ({emp.dept || "No Dept"}) -{" "}
-                        {emp.employee_id || "No ID"}
+                        {emp.name || "No Name"} ({emp.dept || "No Dept"}) — {emp.employee_id || "No ID"}
                       </option>
                     ))}
                   </select>
 
-                  <input
-                    type="text"
-                    className="form-control mb-2"
-                    placeholder="Task title"
-                    value={taskForm.title}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, title: e.target.value })
-                    }
-                  />
+                  <input type="text" className="form-control mb-2" placeholder="Task title" value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} />
 
-                  <div className="row">
-                    <div className="col-md-6">
-                      <input
-                        type="date"
-                        className="form-control mb-2"
-                        value={taskForm.dueDate}
-                        onChange={(e) =>
-                          setTaskForm({ ...taskForm, dueDate: e.target.value })
-                        }
-                      />
+                  <div className="row g-2 mb-3">
+                    <div className="col-6">
+                      <input type="date" className="form-control" value={taskForm.dueDate} onChange={e => setTaskForm({ ...taskForm, dueDate: e.target.value })} />
                     </div>
-
-                    <div className="col-md-6">
-                      <select
-                        className="form-select mb-2"
-                        value={taskForm.priority}
-                        onChange={(e) =>
-                          setTaskForm({ ...taskForm, priority: e.target.value })
-                        }
-                      >
-                        <option>High</option>
-                        <option>Medium</option>
-                        <option>Low</option>
+                    <div className="col-6">
+                      <select className="form-select" value={taskForm.priority} onChange={e => setTaskForm({ ...taskForm, priority: e.target.value })}>
+                        <option>High</option><option>Medium</option><option>Low</option>
                       </select>
                     </div>
                   </div>
 
-                  <button className="btn btn-primary" onClick={assignTask}>
-                    Assign
-                  </button>
+                  <button className="btn btn-primary w-100 mb-3" onClick={assignTask}>Assign Task</button>
 
-                  <div className="mt-3">
-                    {recentTasks.length === 0 ? (
-                      <p>No tasks available</p>
-                    ) : (
-                      recentTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="task-item p-3 mb-2 d-flex justify-content-between align-items-center flex-wrap gap-3"
-                        >
-                          <div>
-                            <strong>{task.title}</strong>
-                            <div>
-                              Employee: {task.employee_name || task.name || "N/A"}
-                            </div>
-
-                            <div className="mt-1">
-                              Priority:
-                              <span
-                                className={`priority-badge ${getPriorityClass(
-                                  task.priority
-                                )}`}
-                              >
-                                {task.priority || "Medium"}
-                              </span>
-                            </div>
-
-                            <div>
-                              Due:{" "}
-                              {task.due_date
-                                ? String(task.due_date).split("T")[0]
-                                : "No date"}
-                            </div>
-                          </div>
-
-                          <div className="d-flex gap-2">
-                            <button
-                              className="btn btn-sm btn-warning"
-                              onClick={() => updateTask(task)}
-                            >
-                              Edit
-                            </button>
-
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => deleteTask(task.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
+                  <div className="card-section-title mt-2">Task List</div>
+                  {recentTasks.length === 0 ? (
+                    <p style={{ color: "var(--text-faint)", fontSize: 13 }}>No tasks yet</p>
+                  ) : recentTasks.map(task => (
+                    <div key={task.id} className="task-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{task.title}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                          {task.employee_name || task.name || "N/A"}
+                          <span className={`priority-badge ${getPriorityClass(task.priority)}`}>{task.priority || "Medium"}</span>
                         </div>
-                      ))
-                    )}
-                  </div>
+                        <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2, fontFamily: "var(--font-mono)" }}>
+                          Due: {task.due_date ? String(task.due_date).split("T")[0] : "—"}
+                        </div>
+                      </div>
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-sm btn-warning" onClick={() => updateTask(task)}>Edit</button>
+                        <button className="btn btn-sm btn-danger"  onClick={() => deleteTask(task.id)}>Delete</button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
+              {/* Announcements */}
               <div className="col-md-6">
-                <div className="card custom-card p-3 mb-4">
-                  <h5>Add Announcement</h5>
+                <div className="custom-card p-4 h-100">
+                  <div className="card-section-title">Announcements</div>
 
-                  <div className="d-flex gap-2">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={announcementInput}
-                      onChange={(e) => setAnnouncementInput(e.target.value)}
-                      placeholder="Enter Announcement..."
-                    />
-                    <button className="btn btn-success" onClick={addAnnouncement}>
-                      Add
-                    </button>
+                  <div className="d-flex gap-2 mb-3">
+                    <input type="text" className="form-control" value={announcementInput} onChange={e => setAnnouncementInput(e.target.value)} placeholder="Enter announcement…" />
+                    <button className="btn btn-success" onClick={addAnnouncement} style={{ whiteSpace: "nowrap" }}>+ Add</button>
                   </div>
 
-                  <div className="mt-3">
-                    {announcements.length === 0 ? (
-                      <p>No announcements available</p>
-                    ) : (
-                      announcements.map((item) => {
-                        const announcementId = item.id || item.announcement_id;
-
-                        return (
-                          <div
-                            key={announcementId}
-                            className="announcement-item p-2 mb-2 d-flex justify-content-between align-items-center"
-                          >
-                            <span>{item.text}</span>
-
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => deleteAnnouncement(announcementId)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
+                  {announcements.length === 0 ? (
+                    <p style={{ color: "var(--text-faint)", fontSize: 13 }}>No announcements yet</p>
+                  ) : announcements.map(item => {
+                    const id = item.id || item.announcement_id;
+                    return (
+                      <div key={id} className="announcement-item">
+                        <span style={{ fontSize: 13 }}>{item.text}</span>
+                        <button className="btn btn-sm btn-danger" onClick={() => deleteAnnouncement(id)}>Delete</button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </>
         )}
 
+        {/* ── OTHER PAGES ── */}
         {activePage === "Attendance" && (
-          <div className="card custom-card p-4">
-            <AdminAttendance />
-          </div>
+          <div className="custom-card p-4"><AdminAttendance /></div>
         )}
-
         {activePage === "Employees" && (
-          <div className="card custom-card p-4">
-            <AdminEmployeeList />
-          </div>
+          <div className="custom-card p-4"><AdminEmployeeList /></div>
         )}
-
         {activePage === "Roles" && (
-          <div className="card custom-card p-4">
-            <AdminRoleManager />
-          </div>
+          <div className="custom-card p-4"><AdminRoleManager /></div>
         )}
-
         {activePage === "Leave Management" && (
-          <div className="card custom-card p-4">
-            <AdminLeaveManagement />
-          </div>
+          <div className="custom-card p-4"><AdminLeaveManagement /></div>
         )}
-
         {activePage === "Admin Approval" && (
-        <div className="card custom-card p-4">
-          <AdminEmployeeApproval />
-        </div>
+          <div className="custom-card p-4"><AdminEmployeeApproval /></div>
         )}
-        
         {activePage === "Payroll" && (
-          <div className="card custom-card p-4">
+          <div className="custom-card p-4">
             {search && (
               <div className="mb-4">
-                <h5>Search Results</h5>
-
+                <div className="card-section-title">Search Results</div>
                 {filteredEmployees.length === 0 ? (
-                  <p>No employees found</p>
-                ) : (
-                  filteredEmployees.map((emp) => (
-                    <div
-                      key={emp.id}
-                      className={`search-result-item p-3 mb-2 ${
-                        String(selectedPayrollEmployee?.employee_id) ===
-                        String(emp.employee_id)
-                          ? "selected-search-result"
-                          : ""
-                      }`}
-                    >
-                      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                          <strong>{emp.name || "No Name"}</strong>
-                          <div>Employee ID: {emp.employee_id || "N/A"}</div>
-                          <div>Email: {emp.email || "N/A"}</div>
-                          <div>Department: {emp.dept || "N/A"}</div>
-                          <div>Designation: {emp.job_title || "N/A"}</div>
+                  <p style={{ color: "var(--text-faint)", fontSize: 13 }}>No employees found</p>
+                ) : filteredEmployees.map(emp => (
+                  <div key={emp.id} className={`search-result-item ${String(selectedPayrollEmployee?.employee_id) === String(emp.employee_id) ? "selected-search-result" : ""}`}>
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                      <div>
+                        <strong style={{ fontSize: 14 }}>{emp.name || "No Name"}</strong>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                          {emp.employee_id} · {emp.email} · {emp.dept} · {emp.job_title}
                         </div>
-
-                        <button
-                          className="btn btn-sm btn-success"
-                          onClick={() => handlePayrollEmployeeSelect(emp)}
-                        >
-                          Use In Payroll
-                        </button>
                       </div>
+                      <button className="btn btn-sm btn-success" onClick={() => handlePayrollEmployeeSelect(emp)}>Use In Payroll</button>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             )}
-
             {selectedPayrollEmployee && (
-              <div className="selected-employee-box mb-4 p-3">
-                <h6>Selected Employee For Payroll</h6>
-                <div><strong>Name:</strong> {selectedPayrollEmployee.name || "No Name"}</div>
-                <div><strong>Employee ID:</strong> {selectedPayrollEmployee.employee_id || "N/A"}</div>
-                <div><strong>Email:</strong> {selectedPayrollEmployee.email || "N/A"}</div>
-                <div><strong>Department:</strong> {selectedPayrollEmployee.dept || "N/A"}</div>
-                <div><strong>Designation:</strong> {selectedPayrollEmployee.job_title || "N/A"}</div>
-
-                <button
-                  className="btn btn-sm btn-outline-danger mt-2"
-                  onClick={() => setSelectedPayrollEmployee(null)}
-                >
-                  Clear Selection
-                </button>
+              <div className="selected-employee-box mb-4">
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", color: "var(--text-faint)", marginBottom: 8 }}>Selected for Payroll</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedPayrollEmployee.name}</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>
+                  {selectedPayrollEmployee.employee_id} · {selectedPayrollEmployee.dept} · {selectedPayrollEmployee.job_title}
+                </div>
+                <button className="btn btn-sm btn-outline-danger mt-2" onClick={() => setSelectedPayrollEmployee(null)}>Clear</button>
               </div>
             )}
-
             <PayrollSystem selectedEmployee={selectedPayrollEmployee} />
           </div>
         )}
-        
         {activePage === "Review Managers" && (
-        <div className="card custom-card p-4">
-          <AdminManagerReview />
-        </div>
-      )}
+          <div className="custom-card p-4"><AdminManagerReview /></div>
+        )}
+        {activePage === "Performance Reviews" && (
+          <div className="custom-card p-4"><AdminPerformanceReviews /></div>
+        )}
 
-      {activePage === "Performance Reviews" && (
-        <div className="card custom-card p-4">
-          <AdminPerformanceReviews />
-        </div>
-      )}
       </div>
     </div>
   );
